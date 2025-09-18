@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌿 Flavorful Journey: Recipe Diary</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f5fff9;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #98ff98;
+      border: none;
+      cursor: pointer;
+      margin-top: 5px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #65cc80;
+    }
+
+    /* Recipes */
+    .recipe {
+      background-color: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .delete-btn {
+      background-color: #ff6b6b;
+      color: white;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 14px;
+      margin-top: 8px;
+      width: auto;
+    }
+
+    .delete-btn:hover {
+      background-color: #ff3b3b;
+    }
+
+    /* Recipe of the Day */
+    #recipeOfTheDay {
+      background-color: #fff9c4;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Catalog view */
+    .catalog {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    .catalog-item {
+      flex: 1;
+      max-width: 140px;
+      background-color: #d0ffd0;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .catalog-item:hover {
+      background-color: #98ff98;
+    }
+    .catalog-item span {
+      display: block;
+      font-size: 2rem;
+    }
+
+    /* Dancing food emojis (watermark style) */
+    .emoji {
+      position: fixed;
+      font-size: 5rem;
+      opacity: 0.2;
+      animation: float 6s infinite alternate;
+      z-index: 1;
+    }
+    .emoji:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+    .emoji:nth-child(2) { top: 40%; left: 50%; animation-delay: 1s; }
+    .emoji:nth-child(3) { top: 70%; left: 30%; animation-delay: 2s; }
+    .emoji:nth-child(4) { top: 60%; left: 70%; animation-delay: 3s; }
+
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(15deg); }
+      100% { transform: translateY(0px) rotate(-15deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Dancing emojis watermark -->
+  <div class="emoji">🍕</div>
+  <div class="emoji">🍰</div>
+  <div class="emoji">💃</div>
+  <div class="emoji">🥳</div>
+
+  <div class="container">
+    <!-- Search bar -->
+    <input type="text" id="searchInput" placeholder="🔍 Search recipes by title...">
+
+    <!-- Catalog view -->
+    <div class="catalog">
+      <div class="catalog-item" onclick="selectCuisine('Indian')"><span>🍛</span>Indian</div>
+      <div class="catalog-item" onclick="selectCuisine('Italian')"><span>🍝</span>Italian</div>
+      <div class="catalog-item" onclick="selectCuisine('Chinese')"><span>🥡</span>Chinese</div>
+      <div class="catalog-item" onclick="selectCuisine('Mexican')"><span>🌮</span>Mexican</div>
+      <div class="catalog-item" onclick="selectCuisine('Labanese')"><span>🥙</span>Labanese</div>
+    </div>
+
+    <h2>Add a Recipe</h2>
+    <input type="text" id="recipeTitle" placeholder="Recipe Title 🍲">
+    <textarea id="recipeIngredients" rows="3" placeholder="Ingredients 📝"></textarea>
+    <textarea id="recipeSteps" rows="4" placeholder="Cooking Steps 👩‍🍳"></textarea>
+    <button onclick="addRecipe()">➕ Add Recipe</button>
+
+    <div id="recipeOfTheDay"></div>
+
+    <h2>Recipes</h2>
+    <div id="recipeList"></div>
+  </div>
+
+  <script>
+    let recipes = JSON.parse(localStorage.getItem("recipes")) || [];
+    let selectedCuisine = "";
+
+    function selectCuisine(cuisine) {
+      selectedCuisine = cuisine;
+      displayRecipes(document.getElementById("searchInput").value);
+      showRandomRecipe(); // Update recipe of the day when cuisine changes
+    }
+
+    function displayRecipes(filter="") {
+      const recipeList = document.getElementById("recipeList");
+      recipeList.innerHTML = "";
+      recipes.forEach((recipe, index) => {
+        if ((recipe.cuisine === selectedCuisine || selectedCuisine==="") &&
+            recipe.title.toLowerCase().includes(filter.toLowerCase())) {
+          const div = document.createElement("div");
+          div.className = "recipe";
+          div.innerHTML = `<h3>${recipe.title} (${recipe.cuisine})</h3>
+                           <strong>Ingredients:</strong><p>${recipe.ingredients}</p>
+                           <strong>Steps:</strong><p>${recipe.steps}</p>`;
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "🗑 Delete";
+          delBtn.className = "delete-btn";
+          delBtn.onclick = () => deleteRecipe(index);
+          div.appendChild(delBtn);
+          recipeList.appendChild(div);
+        }
+      });
+    }
+
+    function addRecipe() {
+      const title = document.getElementById("recipeTitle").value.trim();
+      const ingredients = document.getElementById("recipeIngredients").value.trim();
+      const steps = document.getElementById("recipeSteps").value.trim();
+      if (!selectedCuisine) {
+        alert("Please select a cuisine!");
+        return;
+      }
+      if (title && ingredients && steps) {
+        recipes.push({title, ingredients, steps, cuisine: selectedCuisine});
+        localStorage.setItem("recipes", JSON.stringify(recipes));
+        document.getElementById("recipeTitle").value = "";
+        document.getElementById("recipeIngredients").value = "";
+        document.getElementById("recipeSteps").value = "";
+        displayRecipes(document.getElementById("searchInput").value);
+        showRandomRecipe(); // Show updated Recipe of the Day
+      } else {
+        alert("Please fill all fields!");
+      }
+    }
+
+    function deleteRecipe(index) {
+      recipes.splice(index, 1);
+      localStorage.setItem("recipes", JSON.stringify(recipes));
+      displayRecipes(document.getElementById("searchInput").value);
+      showRandomRecipe(); // Update Recipe of the Day
+    }
+
+    function showRandomRecipe() {
+      const displayDiv = document.getElementById("recipeOfTheDay");
+      const filteredRecipes = recipes.filter(r => !selectedCuisine || r.cuisine === selectedCuisine);
+      if(filteredRecipes.length === 0) {
+        displayDiv.innerHTML = "<strong>Recipe of the Day:</strong> No recipes yet!";
+        return;
+      }
+      const random = filteredRecipes[Math.floor(Math.random() * filteredRecipes.length)];
+      displayDiv.innerHTML = `<h3>🍽 Recipe of the Day</h3>
+      <strong>Title:</strong> ${random.title} (${random.cuisine})<br>
+      <strong>Ingredients:</strong> ${random.ingredients}<br>
+      <strong>Steps:</strong> ${random.steps}`;
+    }
+
+    document.getElementById("searchInput").addEventListener("input", () => {
+      displayRecipes(document.getElementById("searchInput").value);
+    });
+
+    window.onload = () => {
+      displayRecipes();
+      showRandomRecipe();
+    };
+  </script>
+</body>
+</html>
